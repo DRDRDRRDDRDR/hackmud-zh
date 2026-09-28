@@ -32,6 +32,19 @@ jobs:
       - name: 运行 ci_selftest.py
         run: python3 ci_selftest.py
 
+  protocol:
+    name: 协议字符串闸门 (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 安装反汇编依赖
+        run: pip install dnfile dncil
+      - name: 断言没有中文流入网络/协议 API
+        run: python3 audit_protocol.py
+
   installer:
     name: 安装 / 幂等 / 回滚 往返 (Windows)
     runs-on: windows-latest

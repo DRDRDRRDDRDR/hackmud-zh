@@ -23,6 +23,7 @@ REQUIRED = [
     "install_zh.ps1", "build_release.py", "verify_package.py", "ci_selftest.py",
     "SHA256SUMS.txt", "Managed/Core.dll", "resources.assets",
     "docs/install_notes.md", "docs/术语保留决策.md",
+    "audit_protocol.py",
 ]
 
 # 原版哈希（回滚校验用）

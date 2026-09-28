@@ -24,7 +24,7 @@ REL = os.path.join(ROOT, "release")
 DIST = os.path.join(ROOT, "dist")
 TEMPLATE_PS1 = os.path.join(DIST, "hackmud_zh_patch", "install_zh.ps1")
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 ZIP = os.path.join(DIST, "hackmud-zh-v%s.zip" % VERSION)
 
 # 真源 -> release 内的目标相对路径
