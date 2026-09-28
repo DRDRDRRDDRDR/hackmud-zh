@@ -1,11 +1,14 @@
 # hackmud 简体中文汉化补丁
 
+[![verify-package](https://github.com/DRDRDRRDDRDR/hackmud-zh/actions/workflows/verify.yml/badge.svg)](https://github.com/DRDRDRRDDRDR/hackmud-zh/actions/workflows/verify.yml)
+
 给 Steam 版 **hackmud**（Unity 6 / Mono）做的简体中文汉化补丁，**等长回写**游戏主程序集，
 并替换字体资产以支持中文字形渲染。
 
 - 汉化条目：**256 条**（界面提示、错误信息、帮助文本、终端横幅）
 - 字体：把游戏的 Liberation Sans 与思源黑体子集合并，中文字符可正常渲染
 - 安装：一键 PowerShell 脚本，自动备份 → 覆盖 → 哈希校验，支持**一键回滚**
+- 发布包每次提交都过 CI：载荷哈希、脚本内嵌常量、编码、以及安装/幂等/回滚往返
 
 ---
 
@@ -105,16 +108,36 @@ powershell -ExecutionPolicy Bypass -File install_zh.ps1 install -GameData "D:\St
 .
 ├── install_zh.ps1          一键安装 / 回滚 / 校验
 ├── build_release.py        可复现地重建本发布包（同步哈希常量与 zip）
+├── verify_package.py       校验包自洽性（CI 与本地共用同一份判据）
+├── ci_selftest.py          反向自检：人为破坏必须被检出
 ├── Managed/Core.dll        汉化后的主程序集
 ├── resources.assets        含中文字形的字体资产
 ├── SHA256SUMS.txt          载荷哈希
 ├── LICENSE                 许可（仅覆盖原创的脚本与文档）
 ├── NOTICE.md               权利归属、使用风险与免责声明
 ├── .gitattributes          行尾规范（保证 clone 后内容一致、哈希可比对）
+├── .github/workflows/       CI：包完整性 + 反向自检 + 安装脚本往返测试
 └── docs/
     ├── install_notes.md        原始安装说明
     └── 术语保留决策.md          哪些刻意不译、依据是什么
 ```
+
+## 自动化校验
+
+本地跑一遍（和 CI 用的是同一份判据）：
+
+```bash
+python verify_package.py     # 载荷哈希 / 脚本内嵌常量 / BOM / 必备文件
+python ci_selftest.py        # 反向自检：破坏后必须失败，否则说明闸门是空的
+```
+
+CI 三个作业（见 `.github/workflows/verify.yml`）：
+
+| 作业 | 运行环境 | 做什么 |
+|---|---|---|
+| `integrity` | Linux | 跑 `verify_package.py` |
+| `selftest` | Linux | 跑 `ci_selftest.py`：翻转载荷字节 / 改坏脚本常量 / 去掉 BOM / 篡改 `SHA256SUMS.txt` / 删必备文件 —— 五种破坏都必须被检出 |
+| `installer` | Windows | 把补丁装进临时「假游戏目录」：`install` → 再 `install`（幂等）→ `verify` → `rollback`，并断言回滚后**逐字节**还原为原文件 |
 
 ### 维护者：改完载荷怎么重新发版
 

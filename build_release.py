@@ -140,7 +140,8 @@ def main():
         os.remove(ZIP)
     with zipfile.ZipFile(ZIP, "w", zipfile.ZIP_DEFLATED) as z:
         for root, dirs, files in os.walk(REL):
-            dirs[:] = [d for d in dirs if d != ".git"]
+            # .git 是版本库元数据、.github 是 CI 配置，都不属于给用户的安装包
+            dirs[:] = [d for d in dirs if d not in (".git", ".github")]
             for fn in sorted(files):
                 p = os.path.join(root, fn)
                 z.write(p, os.path.relpath(p, REL))
