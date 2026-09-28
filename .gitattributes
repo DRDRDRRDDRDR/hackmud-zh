@@ -1,0 +1,19 @@
+# 行尾与文本属性 — 保证任何人 clone 后内容一致、哈希可比对
+* text=auto
+
+# Windows 脚本：检出为 CRLF（PowerShell 友好），仓库内统一存储
+*.ps1  text eol=crlf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# 文档：统一 LF
+*.md   text eol=lf
+*.txt  text eol=lf
+
+# 补丁载荷与二进制资源：绝不参与任何文本转换
+*.dll      binary
+*.assets   binary
+*.png      binary
+*.jpg      binary
+*.zip      binary
+*.exe      binary

@@ -104,12 +104,26 @@ powershell -ExecutionPolicy Bypass -File install_zh.ps1 install -GameData "D:\St
 ```
 .
 ├── install_zh.ps1          一键安装 / 回滚 / 校验
+├── build_release.py        可复现地重建本发布包（同步哈希常量与 zip）
 ├── Managed/Core.dll        汉化后的主程序集
 ├── resources.assets        含中文字形的字体资产
 ├── SHA256SUMS.txt          载荷哈希
+├── LICENSE                 许可（仅覆盖原创的脚本与文档）
+├── NOTICE.md               权利归属、使用风险与免责声明
+├── .gitattributes          行尾规范（保证 clone 后内容一致、哈希可比对）
 └── docs/
     ├── install_notes.md        原始安装说明
     └── 术语保留决策.md          哪些刻意不译、依据是什么
+```
+
+### 维护者：改完载荷怎么重新发版
+
+载荷（`Core.dll` / `resources.assets`）一变，安装脚本内嵌的 SHA256 常量、`SHA256SUMS.txt`
+和分发 zip 三者必须同步，漏一个用户就会看到「校验失败」。所以别手工改，跑脚本：
+
+```
+python build_release.py          # 重新组装 + 重建 zip + 自检
+python build_release.py --check  # 只校验当前仓库内容是否与真源一致
 ```
 
 ## 校验安装包完整性
@@ -136,6 +150,14 @@ Get-FileHash resources.assets -Algorithm SHA256
   `resources.assets` 中的 `Font` 对象 `m_FontData`。Unity 6 的动态字体在运行时用 FreeType
   按 `m_FontData` 重新生成字形，故旧的字形表被忽略。
 - 汉化条目与判据（哪些能译、哪些不能）见 `docs/术语保留决策.md`。
+
+## 许可
+
+- 本仓库**原创部分**（安装脚本、构建脚本、文档）按 **MIT** 授权，见 [LICENSE](LICENSE)。
+- 分发的**游戏二进制文件**（`Managed/Core.dll`、`resources.assets`）**不在** MIT 范围内，
+  权利归 hackmud 开发者所有，仅作汉化交流之用。**本补丁不含游戏本体**，使用前请自行
+  通过 Steam 购买并安装 hackmud。
+- 权利归属、使用风险与免责声明的完整说明见 [NOTICE.md](NOTICE.md)。
 
 ## 致谢与声明
 
