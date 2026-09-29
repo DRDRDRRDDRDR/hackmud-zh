@@ -82,6 +82,8 @@ powershell -ExecutionPolicy Bypass -File install_zh.ps1 install -GameData "D:\St
   位于 Unity 资产 `sharedassets0.assets`，采用逐帧等长替换）
 - **内核自检 / 修复状态串**（`-running self diagnostics-`、`-kernel error detected-`、
   `-attempting fix-`、`-fix successful-` … 共 9 条，位于场景文件 `level0`）
+- **硬连线接入界面文本**（`ACQUIRING HARDLINE` → `接入硬连线中`、`HARDLINE ENGAGE` → `硬连线接通`）
+  与输入占位符（`placeholder text` → `占位文本`）
 
 ### 刻意保留英文（不译）
 
@@ -101,6 +103,8 @@ powershell -ExecutionPolicy Bypass -File install_zh.ps1 install -GameData "D:\St
 
 - **在线内容无法汉化**：hackmud 是在线多人游戏，服务器下发的文本（其他玩家消息、排行榜、
   公告、marks 教学脚本输出）不经客户端，补丁改不到。
+- **引擎内部命名不译**：资产里的着色器属性名、音频片段名、材质/字体名等不是给玩家看的文本。
+  全部 Unity 资产已扫描分拣（143 条候选 → 3 条真界面文本，其余为内部命名与已确证不可译项）。
 - **终端表格可能错位**：帮助文本的对齐基于等宽英文，中文按 2 倍宽显示，部分表格列会偏（仅显示问题）。
 - **历史滚动记录不会变**：游戏会把终端回滚缓冲（`%APPDATA%\hackmud\shell.txt`）在启动时回放，
   补丁前产生的英文历史仍是英文。游戏内输入 `clear`，或安装前备份并清空该文件即可。

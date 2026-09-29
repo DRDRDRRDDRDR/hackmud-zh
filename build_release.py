@@ -25,7 +25,7 @@ REL = os.path.join(ROOT, "release")
 DIST = os.path.join(ROOT, "dist")
 TEMPLATE_PS1 = os.path.join(RECON, "install_zh.ps1")
 
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 ZIP = os.path.join(DIST, "hackmud-zh-v%s.zip" % VERSION)
 
 # 载荷清单：顺序必须与 install_zh.ps1 的 $Files 表一致
