@@ -176,6 +176,8 @@ def main():
         ("level0",               "HARDLINE ENGAGE",            "硬连线接通",      "utf-8",    None),
         ("Managed/Core.dll",     "offers",                     "提供",            "utf-16le", "提供    "),
         ("Managed/Core.dll",     "-=accepts=-",                "-=接受=-",        "utf-16le", "-=接受=-     "),
+        ("Managed/Core.dll",     "Received",                   "收到",            "utf-16le", "收到      "),
+        ("Managed/Core.dll",     "CONNECTING",                 "连接中",          "utf-16le", "连接中       "),
     ]
     for rel, en, zh, enc, exact in ASSET_EXPECT:
         p = os.path.join(root, rel)
