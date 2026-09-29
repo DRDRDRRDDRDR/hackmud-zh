@@ -154,34 +154,41 @@ def main():
         else:
             fail("声明了 %s 但文件不存在" % rel)
 
-    # 6. 资产层译文落地断言：原文必须消失、译文必须出现
-    #    这道闸门防的是「资产被从原版重建、把已汉化的文本又冲回英文」这类回归。
-    print("\n[6] 资产层译文落地（禁止残留原文）")
+    # 6. 译文落地断言：原文必须消失、译文必须出现
+    #    这道闸门防的是「容器被从原版重建、把已汉化的文本又冲回英文」这类回归。
+    #    注意编码：Unity 资产里的串是 UTF-8；Core.dll 的 #US 堆是 UTF-16LE。
+    #    对 Core.dll 还要用【精确填充形态】判译文（"提供" 是常见词，裸查会假阳性）。
+    print("\n[6] 译文落地（禁止残留原文）")
     ASSET_EXPECT = [
-        ("sharedassets0.assets", "initializing kernel",        "初始化内核"),
-        ("sharedassets0.assets", "placeholder text",           "占位文本"),
-        ("level0",               "-running self diagnostics-", "-正在运行自检-"),
-        ("level0",               "-kernel error detected-",    "-检测到内核错误-"),
-        ("level0",               "-attempting fix-",           "-尝试修复-"),
-        ("level0",               "-fix successful-",           "-修复成功-"),
-        ("level0",               "-initializing kernel-",      "-初始化内核-"),
-        ("level0",               "-creating acct-",            "-创建账户-"),
-        ("level0",               "-crosslinking hardline-",    "-交叉连接硬连线-"),
-        ("level0",               "-patching terminal-",        "-修补终端-"),
-        ("level0",               "-complete-",                 "-完成-"),
-        ("level0",               "ACQUIRING HARDLINE",         "接入硬连线中"),
-        ("level0",               "HARDLINE ENGAGE",            "硬连线接通"),
+        # (文件, 原文, 译文, 编码, 译文的精确形态[None=用译文裸串])
+        ("sharedassets0.assets", "initializing kernel",        "初始化内核",      "utf-8",    None),
+        ("sharedassets0.assets", "placeholder text",           "占位文本",        "utf-8",    None),
+        ("level0",               "-running self diagnostics-", "-正在运行自检-",  "utf-8",    None),
+        ("level0",               "-kernel error detected-",    "-检测到内核错误-", "utf-8",    None),
+        ("level0",               "-attempting fix-",           "-尝试修复-",      "utf-8",    None),
+        ("level0",               "-fix successful-",           "-修复成功-",      "utf-8",    None),
+        ("level0",               "-initializing kernel-",      "-初始化内核-",    "utf-8",    None),
+        ("level0",               "-creating acct-",            "-创建账户-",      "utf-8",    None),
+        ("level0",               "-crosslinking hardline-",    "-交叉连接硬连线-", "utf-8",    None),
+        ("level0",               "-patching terminal-",        "-修补终端-",      "utf-8",    None),
+        ("level0",               "-complete-",                 "-完成-",          "utf-8",    None),
+        ("level0",               "ACQUIRING HARDLINE",         "接入硬连线中",    "utf-8",    None),
+        ("level0",               "HARDLINE ENGAGE",            "硬连线接通",      "utf-8",    None),
+        ("Managed/Core.dll",     "offers",                     "提供",            "utf-16le", "提供    "),
+        ("Managed/Core.dll",     "-=accepts=-",                "-=接受=-",        "utf-16le", "-=接受=-     "),
     ]
-    for rel, en, zh in ASSET_EXPECT:
+    for rel, en, zh, enc, exact in ASSET_EXPECT:
         p = os.path.join(root, rel)
         if not os.path.exists(p):
-            fail("资产缺失 %s（无法做译文落地断言）" % rel)
+            fail("缺少 %s（无法做译文落地断言）" % rel)
             continue
         blob = open(p, "rb").read()
-        if en.encode("utf-8") in blob:
+        enb = en.encode(enc)
+        zhb = (exact if exact else zh).encode(enc)
+        if enb in blob:
             fail("%s 仍残留原文 %r" % (rel, en))
-        elif zh.encode("utf-8") not in blob:
-            fail("%s 缺少译文 %r" % (rel, zh))
+        elif zhb not in blob:
+            fail("%s 缺少译文 %r%s" % (rel, zh, "（精确形态）" if exact else ""))
         else:
             ok("%s  %r -> %r" % (rel, en[:26], zh))
 

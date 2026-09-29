@@ -84,6 +84,7 @@ powershell -ExecutionPolicy Bypass -File install_zh.ps1 install -GameData "D:\St
   `-attempting fix-`、`-fix successful-` … 共 9 条，位于场景文件 `level0`）
 - **硬连线接入界面文本**（`ACQUIRING HARDLINE` → `接入硬连线中`、`HARDLINE ENGAGE` → `硬连线接通`）
   与输入占位符（`placeholder text` → `占位文本`）
+- **交易界面标签**（`offers` → `提供`、`-=accepts=-` → `-=接受=-`）
 
 ### 刻意保留英文（不译）
 
