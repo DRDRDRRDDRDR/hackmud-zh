@@ -80,6 +80,8 @@ powershell -ExecutionPolicy Bypass -File install_zh.ps1 install -GameData "D:\St
 - 脚本执行结果状态词（`Success` / `Failure` → `成功` / `失败`）
 - **开场自检打字机动画**（`initializing kernel... done.` → `初始化内核... 完成。` 共 13 行，
   位于 Unity 资产 `sharedassets0.assets`，采用逐帧等长替换）
+- **内核自检 / 修复状态串**（`-running self diagnostics-`、`-kernel error detected-`、
+  `-attempting fix-`、`-fix successful-` … 共 9 条，位于场景文件 `level0`）
 
 ### 刻意保留英文（不译）
 
@@ -117,6 +119,7 @@ powershell -ExecutionPolicy Bypass -File install_zh.ps1 install -GameData "D:\St
 ├── Managed/Core.dll        汉化后的主程序集
 ├── resources.assets        含中文字形的字体资产
 ├── sharedassets0.assets    含中文开场自检文字的资产
+├── level0                  含中文内核自检/修复状态串的场景文件
 ├── SHA256SUMS.txt          载荷哈希
 ├── LICENSE                 许可（仅覆盖原创的脚本与文档）
 ├── NOTICE.md               权利归属、使用风险与免责声明

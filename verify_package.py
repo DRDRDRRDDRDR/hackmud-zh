@@ -21,19 +21,20 @@ import hashlib
 REQUIRED = [
     "README.md", "LICENSE", "NOTICE.md", ".gitattributes",
     "install_zh.ps1", "build_release.py", "verify_package.py", "ci_selftest.py",
-    "SHA256SUMS.txt", "Managed/Core.dll", "resources.assets", "sharedassets0.assets",
+    "SHA256SUMS.txt", "Managed/Core.dll", "resources.assets", "sharedassets0.assets", "level0",
     "docs/install_notes.md", "docs/术语保留决策.md",
     "audit_protocol.py",
 ]
 
 # 载荷清单（顺序与 install_zh.ps1 的 $Files 表一致）
-PAYLOADS = ["Managed/Core.dll", "resources.assets", "sharedassets0.assets"]
+PAYLOADS = ["Managed/Core.dll", "resources.assets", "sharedassets0.assets", "level0"]
 
 # 原版哈希（回滚校验用）
 ORIG = {
     "Managed/Core.dll": "D424EAB9372946946B5FFD9DC49B17D9C5060B3CEC638A5952E7EAD99CD696E6",
     "resources.assets": "E2E661C96397F9C444936B9767F7F723B5FDAF64FC4ECB04B52E7D5B678C0003",
     "sharedassets0.assets": "E07F027F18A41DB03E387DF729DB77D933AC1B0593826640A4E91FE6E7709D9B",
+    "level0": "2D7FC2DA43E6273E8D1A2A3D2E2761869563C7C4D99DA34905E0581463B7441A",
 }
 
 

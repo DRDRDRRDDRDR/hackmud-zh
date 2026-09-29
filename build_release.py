@@ -25,7 +25,7 @@ REL = os.path.join(ROOT, "release")
 DIST = os.path.join(ROOT, "dist")
 TEMPLATE_PS1 = os.path.join(RECON, "install_zh.ps1")
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 ZIP = os.path.join(DIST, "hackmud-zh-v%s.zip" % VERSION)
 
 # 载荷清单：顺序必须与 install_zh.ps1 的 $Files 表一致
@@ -37,6 +37,8 @@ PAYLOADS = [
      "E2E661C96397F9C444936B9767F7F723B5FDAF64FC4ECB04B52E7D5B678C0003"),
     ("sharedassets0.assets",  "sharedassets0_zh.assets",
      "E07F027F18A41DB03E387DF729DB77D933AC1B0593826640A4E91FE6E7709D9B"),
+    ("level0",                "level0_zh",
+     "2D7FC2DA43E6273E8D1A2A3D2E2761869563C7C4D99DA34905E0581463B7441A"),
 ]
 
 # 其余需要随包分发的文件（不改内容，原样复制）
