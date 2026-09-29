@@ -154,6 +154,37 @@ def main():
         else:
             fail("声明了 %s 但文件不存在" % rel)
 
+    # 6. 资产层译文落地断言：原文必须消失、译文必须出现
+    #    这道闸门防的是「资产被从原版重建、把已汉化的文本又冲回英文」这类回归。
+    print("\n[6] 资产层译文落地（禁止残留原文）")
+    ASSET_EXPECT = [
+        ("sharedassets0.assets", "initializing kernel",        "初始化内核"),
+        ("sharedassets0.assets", "placeholder text",           "占位文本"),
+        ("level0",               "-running self diagnostics-", "-正在运行自检-"),
+        ("level0",               "-kernel error detected-",    "-检测到内核错误-"),
+        ("level0",               "-attempting fix-",           "-尝试修复-"),
+        ("level0",               "-fix successful-",           "-修复成功-"),
+        ("level0",               "-initializing kernel-",      "-初始化内核-"),
+        ("level0",               "-creating acct-",            "-创建账户-"),
+        ("level0",               "-crosslinking hardline-",    "-交叉连接硬连线-"),
+        ("level0",               "-patching terminal-",        "-修补终端-"),
+        ("level0",               "-complete-",                 "-完成-"),
+        ("level0",               "ACQUIRING HARDLINE",         "接入硬连线中"),
+        ("level0",               "HARDLINE ENGAGE",            "硬连线接通"),
+    ]
+    for rel, en, zh in ASSET_EXPECT:
+        p = os.path.join(root, rel)
+        if not os.path.exists(p):
+            fail("资产缺失 %s（无法做译文落地断言）" % rel)
+            continue
+        blob = open(p, "rb").read()
+        if en.encode("utf-8") in blob:
+            fail("%s 仍残留原文 %r" % (rel, en))
+        elif zh.encode("utf-8") not in blob:
+            fail("%s 缺少译文 %r" % (rel, zh))
+        else:
+            ok("%s  %r -> %r" % (rel, en[:26], zh))
+
     print("\n== 结果: %d 项失败 ==" % len(fails))
     for n in notes:
         print("  note  %s" % n)

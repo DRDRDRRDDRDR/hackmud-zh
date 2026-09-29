@@ -81,7 +81,24 @@ def drop_required(d):
     return "删除必备文件 NOTICE.md"
 
 
-NEGATIVES = [tamper_payload, tamper_ps1_constant, strip_bom, tamper_sums, drop_required]
+def revert_asset_text(d):
+    """把 level0 里一条已汉化的串改回英文 —— 模拟「资产被从原版重建，中文被冲掉」。"""
+    p = os.path.join(d, "level0")
+    b = open(p, "rb").read()
+    zh = "-正在运行自检-".encode("utf-8")
+    en = "-running self diagnostics-".encode("utf-8")
+    assert zh in b, "预期 level0 已含该中文串"
+    zhpad = zh + b" " * (len(en) - len(zh))
+    assert zhpad in b, "预期中文串带尾部空格补齐"
+    b2 = b.replace(zhpad, en)
+    assert b2 != b, "替换未发生"
+    assert len(b2) == len(b), "长度应保持不变"
+    open(p, "wb").write(b2)
+    return "把 level0 的『正在运行自检』改回英文（模拟资产回退）"
+
+
+NEGATIVES = [tamper_payload, tamper_ps1_constant, strip_bom, tamper_sums,
+             drop_required, revert_asset_text]
 
 
 def main():
