@@ -3,7 +3,10 @@
 #   powershell -ExecutionPolicy Bypass -File install_zh.ps1 install
 #   powershell -ExecutionPolicy Bypass -File install_zh.ps1 rollback
 #   powershell -ExecutionPolicy Bypass -File install_zh.ps1 verify
-# 参数: install | rollback | verify (缺省 install)
+# 参数: install | rollback | verify (缺省 install)，可选 -GameData <数据目录>
+#
+# 说明：哈希常量 __HASH_n__ / __ORIG_n__ 由 build_release.py 在打包时按实际载荷回填，
+#       不要手改。补丁清单是表格驱动的，新增文件只需往 $Files 里加一行。
 
 param(
     [ValidateSet("install", "rollback", "verify")]
@@ -13,24 +16,18 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# --- 路径 ---
-$ScriptDir   = Split-Path -Parent $MyInvocation.MyCommand.Path
-$PatchCore   = Join-Path $ScriptDir "Managed\Core.dll"
-$PatchAssets = Join-Path $ScriptDir "resources.assets"
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-$GameCore   = Join-Path $GameData "Managed\Core.dll"
-$GameAssets = Join-Path $GameData "resources.assets"
-
-# 期望哈希(补丁包 SHA256SUMS.txt 内容)
-$PatchCoreHash   = "04523E88269020BF92A20A05F132BB3FEF6C19F12D6AAE8855BC3437FA4FBF52"
-$PatchAssetsHash = "5B2345F938D02A4289A76518D3DEA8B604CD3EAEDDE870C3BAE8958CDAB2C6D7"
-# 原版哈希(用于回滚校验)
-$OrigCoreHash   = "D424EAB9372946946B5FFD9DC49B17D9C5060B3CEC638A5952E7EAD99CD696E6"
-$OrigAssetsHash = "E2E661C96397F9C444936B9767F7F723B5FDAF64FC4ECB04B52E7D5B678C0003"
+# 补丁清单：相对路径 / 补丁版期望哈希 / 原版哈希
+$Files = @(
+    @{ Rel = "Managed\Core.dll";     Patch = "04523E88269020BF92A20A05F132BB3FEF6C19F12D6AAE8855BC3437FA4FBF52";  Orig = "D424EAB9372946946B5FFD9DC49B17D9C5060B3CEC638A5952E7EAD99CD696E6" },
+    @{ Rel = "resources.assets";     Patch = "5B2345F938D02A4289A76518D3DEA8B604CD3EAEDDE870C3BAE8958CDAB2C6D7";  Orig = "E2E661C96397F9C444936B9767F7F723B5FDAF64FC4ECB04B52E7D5B678C0003" },
+    @{ Rel = "sharedassets0.assets"; Patch = "436939FD6091DB230F84E0632DBD6AF6D231A9A81C125FF74444F270EB4E221E";  Orig = "E07F027F18A41DB03E387DF729DB77D933AC1B0593826640A4E91FE6E7709D9B" }
+)
 
 function Get-Sha256([string]$Path) {
-    if (-not (Test-Path $Path)) { return $null }
-    return (Get-FileHash -Path $Path -Algorithm SHA256).Hash
+    if (-not (Test-Path -LiteralPath $Path)) { return $null }
+    return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
 }
 
 function Assert-GameStopped {
@@ -42,17 +39,28 @@ function Assert-GameStopped {
 }
 
 function Test-IsPatched {
-    $h1 = Get-Sha256 $GameCore
-    $h2 = Get-Sha256 $GameAssets
-    return ($h1 -eq $PatchCoreHash) -and ($h2 -eq $PatchAssetsHash)
+    foreach ($f in $Files) {
+        if ((Get-Sha256 (Join-Path $GameData $f.Rel)) -ne $f.Patch) { return $false }
+    }
+    return $true
+}
+
+function Test-IsOriginal {
+    foreach ($f in $Files) {
+        if ((Get-Sha256 (Join-Path $GameData $f.Rel)) -ne $f.Orig) { return $false }
+    }
+    return $true
 }
 
 # ---------- 安装 ----------
 if ($Action -eq "install") {
     Write-Host "== hackmud 汉化补丁 安装 ==" -ForegroundColor Cyan
-    if (-not (Test-Path $GameData)) { Write-Host "!! 找不到游戏目录: $GameData" -ForegroundColor Red; exit 1 }
-    if (-not (Test-Path $PatchCore)) { Write-Host "!! 缺少补丁文件 Managed\Core.dll" -ForegroundColor Red; exit 1 }
-    if (-not (Test-Path $PatchAssets)) { Write-Host "!! 缺少补丁文件 resources.assets" -ForegroundColor Red; exit 1 }
+    if (-not (Test-Path -LiteralPath $GameData)) { Write-Host "!! 找不到游戏目录: $GameData" -ForegroundColor Red; exit 1 }
+
+    foreach ($f in $Files) {
+        $src = Join-Path $ScriptDir $f.Rel
+        if (-not (Test-Path -LiteralPath $src)) { Write-Host "!! 缺少补丁文件 $($f.Rel)" -ForegroundColor Red; exit 1 }
+    }
     Assert-GameStopped
 
     if (Test-IsPatched) {
@@ -60,26 +68,29 @@ if ($Action -eq "install") {
         exit 0
     }
 
-    # 备份原文件(仅当当前不是汉化版时)
-    foreach ($pair in @(@($GameCore, "$GameCore.bak"), @($GameAssets, "$GameAssets.bak"))) {
-        $src = $pair[0]; $dst = $pair[1]
-        if ((Test-Path $src) -and -not (Test-Path $dst)) {
-            Copy-Item -Path $src -Destination $dst -Force
-            Write-Host "已备份 $src -> $dst" -ForegroundColor DarkGray
+    foreach ($f in $Files) {
+        $dst = Join-Path $GameData $f.Rel
+        $bak = "$dst.bak"
+        if ((Test-Path -LiteralPath $dst) -and -not (Test-Path -LiteralPath $bak)) {
+            Copy-Item -LiteralPath $dst -Destination $bak -Force
+            Write-Host "已备份 $($f.Rel) -> $($f.Rel).bak" -ForegroundColor DarkGray
         }
     }
 
-    Copy-Item -Path $PatchCore   -Destination $GameCore   -Force
-    Copy-Item -Path $PatchAssets -Destination $GameAssets -Force
+    foreach ($f in $Files) {
+        Copy-Item -LiteralPath (Join-Path $ScriptDir $f.Rel) -Destination (Join-Path $GameData $f.Rel) -Force
+    }
     Write-Host "已复制汉化文件" -ForegroundColor Green
 
-    # 校验
-    $c = Get-Sha256 $GameCore
-    $a = Get-Sha256 $GameAssets
-    if ($c -eq $PatchCoreHash -and $a -eq $PatchAssetsHash) {
+    $bad = 0
+    foreach ($f in $Files) {
+        $h = Get-Sha256 (Join-Path $GameData $f.Rel)
+        if ($h -ne $f.Patch) { Write-Host "!! $($f.Rel) 校验不符: $h" -ForegroundColor Red; $bad++ }
+    }
+    if ($bad -eq 0) {
         Write-Host "✔ 安装校验通过。启动 hackmud 即可看到中文界面。" -ForegroundColor Green
     } else {
-        Write-Host "!! 安装后哈希不符! 请检查文件是否被其他程序改动" -ForegroundColor Red
+        Write-Host "!! 安装后有文件哈希不符! 请检查是否被其它程序改动" -ForegroundColor Red
         exit 1
     }
     exit 0
@@ -90,16 +101,19 @@ if ($Action -eq "rollback") {
     Write-Host "== hackmud 汉化补丁 回滚 ==" -ForegroundColor Cyan
     Assert-GameStopped
     $ok = $true
-    foreach ($pair in @(@($GameCore, "$GameCore.bak"), @($GameAssets, "$GameAssets.bak"))) {
-        $src = $pair[0]; $dst = $pair[1]
-        if (-not (Test-Path $dst)) { Write-Host "!! 找不到备份 $dst,无法回滚" -ForegroundColor Red; $ok = $false; continue }
-        Copy-Item -Path $dst -Destination $src -Force
-        Write-Host "已从备份恢复 $src" -ForegroundColor Green
+    foreach ($f in $Files) {
+        $dst = Join-Path $GameData $f.Rel
+        $bak = "$dst.bak"
+        if (-not (Test-Path -LiteralPath $bak)) {
+            Write-Host "!! 找不到备份 $($f.Rel).bak,该文件无法回滚" -ForegroundColor Yellow
+            $ok = $false
+            continue
+        }
+        Copy-Item -LiteralPath $bak -Destination $dst -Force
+        Write-Host "已从备份恢复 $($f.Rel)" -ForegroundColor Green
     }
     if ($ok) {
-        $c = Get-Sha256 $GameCore
-        $a = Get-Sha256 $GameAssets
-        if ($c -eq $OrigCoreHash -and $a -eq $OrigAssetsHash) {
+        if (Test-IsOriginal) {
             Write-Host "✔ 回滚校验通过,已恢复原版" -ForegroundColor Green
         } else {
             Write-Host "!! 回滚后哈希与原版不符! 可再用 Steam 验证文件完整性恢复" -ForegroundColor Yellow
@@ -111,16 +125,15 @@ if ($Action -eq "rollback") {
 # ---------- 校验 ----------
 if ($Action -eq "verify") {
     Write-Host "== hackmud 汉化补丁 状态校验 ==" -ForegroundColor Cyan
-    $c = Get-Sha256 $GameCore
-    $a = Get-Sha256 $GameAssets
-    Write-Host "Core.dll        : $c"
-    Write-Host "resources.assets: $a"
-    if ($c -eq $PatchCoreHash -and $a -eq $PatchAssetsHash) {
+    foreach ($f in $Files) {
+        Write-Host ("{0,-24}: {1}" -f $f.Rel, (Get-Sha256 (Join-Path $GameData $f.Rel)))
+    }
+    if (Test-IsPatched) {
         Write-Host "✔ 状态: 已安装汉化版" -ForegroundColor Green
-    } elseif ($c -eq $OrigCoreHash -and $a -eq $OrigAssetsHash) {
+    } elseif (Test-IsOriginal) {
         Write-Host "✔ 状态: 原版(未安装汉化)" -ForegroundColor Gray
     } else {
-        Write-Host "! 状态: 未知/混合(可能被其他补丁改动)" -ForegroundColor Yellow
+        Write-Host "! 状态: 未知/混合(可能被其他补丁改动,或只装了部分文件)" -ForegroundColor Yellow
     }
     exit 0
 }

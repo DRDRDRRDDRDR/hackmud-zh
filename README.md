@@ -78,6 +78,8 @@ powershell -ExecutionPolicy Bypass -File install_zh.ps1 install -GameData "D:\St
 - 命令用法、解析错误、参数校验失败等提示
 - 帮助文本与常用脚本清单
 - 脚本执行结果状态词（`Success` / `Failure` → `成功` / `失败`）
+- **开场自检打字机动画**（`initializing kernel... done.` → `初始化内核... 完成。` 共 13 行，
+  位于 Unity 资产 `sharedassets0.assets`，采用逐帧等长替换）
 
 ### 刻意保留英文（不译）
 
@@ -86,6 +88,8 @@ powershell -ExecutionPolicy Bypass -File install_zh.ps1 install -GameData "D:\St
 | `FULLSEC` / `MIDSEC` / `HIGHSEC` / `LOWSEC` / `NULLSEC` | 服务器端 `scripts.lib().security_level_names` 的权威取值；客户端用它们做 JSON 键查询与相等比较；且是官方沙盒规则里的**安全边界** |
 | 所有命令名与脚本名（`trade`、`#help`、`accts.balance`、`marks.*` …） | 游戏按英文解析玩家输入，且服务端校验 |
 | `success`（小写，JSON 协议字段名） | 服务器通信协议的一部分 |
+| `scratch` / `chat`（面板标题） | 在 `Core.dll` 里但**同时被当作窗口名/字典键**使用，全文件仅一份副本，翻译会破坏窗口查找 |
+| `Token token="`（Authorization 头前缀） | 协议串：Unity 的 `SetRequestHeader` **拒绝含非 ASCII 的 header 值**，译了会导致所有网络请求失败 |
 
 详见 [`docs/术语保留决策.md`](docs/术语保留决策.md)。
 
@@ -112,11 +116,12 @@ powershell -ExecutionPolicy Bypass -File install_zh.ps1 install -GameData "D:\St
 ├── ci_selftest.py          反向自检：人为破坏必须被检出
 ├── Managed/Core.dll        汉化后的主程序集
 ├── resources.assets        含中文字形的字体资产
+├── sharedassets0.assets    含中文开场自检文字的资产
 ├── SHA256SUMS.txt          载荷哈希
 ├── LICENSE                 许可（仅覆盖原创的脚本与文档）
 ├── NOTICE.md               权利归属、使用风险与免责声明
 ├── .gitattributes          行尾规范（保证 clone 后内容一致、哈希可比对）
-├── .github/workflows/       CI：包完整性 + 反向自检 + 安装脚本往返测试
+├── .github/workflows/       CI：包完整性 + 反向自检 + 协议串闸门 + 安装脚本往返测试
 └── docs/
     ├── install_notes.md        原始安装说明
     └── 术语保留决策.md          哪些刻意不译、依据是什么

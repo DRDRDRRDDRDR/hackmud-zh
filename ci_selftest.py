@@ -49,11 +49,12 @@ def tamper_payload(d):
 def tamper_ps1_constant(d):
     p = os.path.join(d, "install_zh.ps1")
     s = open(p, encoding="utf-8-sig").read()
-    s2 = re.sub(r'(\$PatchCoreHash\s*=\s*")[0-9A-Fa-f]{64}',
-                lambda m: m.group(1) + "0" * 64, s, count=1)
-    assert s2 != s, "替换未发生"
+    # 表格格式：Patch = "<64位十六进制>"；把第一处改成全 0
+    s2, n = re.subn(r'(Patch\s*=\s*")[0-9A-Fa-f]{64}',
+                    lambda m: m.group(1) + "0" * 64, s, count=1)
+    assert n == 1 and s2 != s, "替换未发生"
     open(p, "w", encoding="utf-8-sig").write(s2)
-    return "把 install_zh.ps1 的 $PatchCoreHash 改成全 0"
+    return "把 install_zh.ps1 表格里第一个 Patch 哈希改成全 0"
 
 
 def strip_bom(d):
